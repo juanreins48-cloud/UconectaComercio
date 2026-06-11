@@ -13,7 +13,7 @@ export default function ValidarEmpresas() {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const res = await fetch("http://https://uconecta-backend.onrender.com/api/universidad/empresas-pendientes");
+        const res = await fetch("https://uconecta-backend.onrender.com/api/universidad/empresas-pendientes");
         const data = await res.json();
 
 
@@ -46,7 +46,7 @@ export default function ValidarEmpresas() {
   // 🔵 Validar
   const validarEmpresa = async (id) => {
     try {
-      const res = await fetch("http://https://uconecta-backend.onrender.com/api/universidad/validar-empresa", {
+      const res = await fetch("https://uconecta-backend.onrender.com/api/universidad/validar-empresa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ companyId: id }),

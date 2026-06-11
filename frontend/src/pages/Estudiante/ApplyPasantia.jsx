@@ -16,7 +16,7 @@ export default function ApplyPasantia() {
   useEffect(() => {
     const fetchInternships = async () => {
       try {
-        const res = await fetch("http://https://uconecta-backend.onrender.com/api/ofertas");
+        const res = await fetch("https://uconecta-backend.onrender.com/api/ofertas");
         const data = await res.json();
         if (data.success) {
           // Ofertas premium primero

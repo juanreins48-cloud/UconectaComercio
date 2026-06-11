@@ -14,7 +14,7 @@ export default function ManageApplications() {
   useEffect(() => {
     if (!empresaId) return;
 
-    fetch(`http://https://uconecta-backend.onrender.com/api/solicitudes/company/${empresaId}`)
+    fetch(`https://uconecta-backend.onrender.com/api/solicitudes/company/${empresaId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {

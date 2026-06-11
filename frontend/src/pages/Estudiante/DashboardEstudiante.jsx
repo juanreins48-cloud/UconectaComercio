@@ -27,7 +27,7 @@ export default function StudentDashboard() {
     const fetchData = async () => {
       try {
         
-        const res = await fetch(`http://https://uconecta-backend.onrender.com/api/dashboard/estudiante/${userId}`);
+        const res = await fetch(`https://uconecta-backend.onrender.com/api/dashboard/estudiante/${userId}`);
         const data = await res.json();
 
         setStats(data.stats);
