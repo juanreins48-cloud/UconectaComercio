@@ -94,7 +94,7 @@ export default function Register() {
             >
               <option>Student</option>
               <option>Company</option>
-              <option>University</option>
+    
             </select>
           </div>
 

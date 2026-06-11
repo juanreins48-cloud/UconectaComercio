@@ -17,7 +17,8 @@ import ViewCV from "../pages/Estudiante/ViewCV";
 import ValidarEstudiantes from "../pages/Universidad/ValidarEstudiantes";
 import ValidarEmpresas from "../pages/Universidad/ValidateEmpresas";
 import GenerateStatistics from "../pages/Universidad/GenerateStatics";
-
+import Premium from "../pages/Usuario/Premium";
+import Checkout from "../pages/Usuario/Checkout";
 export default function AppRouter() {
   return (
     <Routes>
@@ -29,7 +30,10 @@ export default function AppRouter() {
             <Route path="/ajustesCuenta" element={<AjustesCuenta />} />
            <Route path="/soporte" element={<Soporte />} />
             <Route path="/Micuenta" element={<MiCuenta />} />
-            
+            <Route
+  path="/premium/checkout"
+  element={<Checkout />}
+/>
       //rutas del estudiante
       <Route path="/student" element={<DashboardEstudiante />} />
        <Route path="/Cv" element={<SubmitCv/>}/>
@@ -51,8 +55,6 @@ export default function AppRouter() {
     />
   } 
 />
-
-
         //rutas de la Universidad
         <Route path="/university" element={<DashboardAdmin />} />
         <Route path="/validate-students" element={<ValidarEstudiantes />} />

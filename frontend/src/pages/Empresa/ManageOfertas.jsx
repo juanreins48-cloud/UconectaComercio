@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Crown } from "lucide-react";
 
 export default function ManageApplications() {
   const navigate = useNavigate();
@@ -9,9 +10,7 @@ export default function ManageApplications() {
   const [decisions, setDecisions] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedCV, setSelectedCV] = useState(null);
-
-  // Modal para aceptar y enviar mensaje
-  const [showAcceptModal, setShowAcceptModal] = useState(null); // guardamos el objeto student
+  const [showAcceptModal, setShowAcceptModal] = useState(null);
   const [acceptMessage, setAcceptMessage] = useState("");
 
   useEffect(() => {
@@ -21,7 +20,13 @@ export default function ManageApplications() {
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          setStudents(data.data || []);
+          // Cambio: ordenar estudiantes premium primero
+          const sorted = [...(data.data || [])].sort((a, b) => {
+            if (a.isPremium && !b.isPremium) return -1;
+            if (!a.isPremium && b.isPremium) return 1;
+            return 0;
+          });
+          setStudents(sorted);
         } else {
           console.error("Error:", data.message);
           setStudents([]);
@@ -45,7 +50,6 @@ export default function ManageApplications() {
     }
   };
 
-  // Abrir modal CV (usa los campos que vienen del backend)
   const viewCV = (student) => {
     const cvData = {
       full_name: student.full_name || student.cv_nombre || student.estudiante_nombre,
@@ -61,13 +65,11 @@ export default function ManageApplications() {
     setSelectedCV(cvData);
   };
 
-  // Abrir modal aceptar (empresa escribe mensaje)
   const openAcceptModal = (student) => {
     setShowAcceptModal(student);
-    setAcceptMessage(""); // limpiar
+    setAcceptMessage("");
   };
 
-  // Enviar aceptación con mensaje al backend
   const sendAcceptance = async () => {
     if (!showAcceptModal) return;
 
@@ -83,16 +85,21 @@ export default function ManageApplications() {
         }),
       });
 
-      // actualizar estado en la UI localmente y cerrar modal
       setDecisions({ ...decisions, [aplicacionId]: "aceptado" });
       setShowAcceptModal(null);
       setAcceptMessage("");
 
-      // recargar lista de aplicaciones (opcional)
       setLoading(true);
       const res = await fetch(`http://localhost:4000/api/solicitudes/company/${empresaId}`);
       const data = await res.json();
-      if (data.success) setStudents(data.data || []);
+      if (data.success) {
+        const sorted = [...(data.data || [])].sort((a, b) => {
+          if (a.isPremium && !b.isPremium) return -1;
+          if (!a.isPremium && b.isPremium) return 1;
+          return 0;
+        });
+        setStudents(sorted);
+      }
       setLoading(false);
 
     } catch (err) {
@@ -127,8 +134,20 @@ export default function ManageApplications() {
             {students.map((student) => (
               <div
                 key={student.aplicacion_id}
-                className="bg-white shadow rounded-xl p-4 border border-gray-100 hover:shadow-md transition"
+                className={`bg-white shadow rounded-xl p-4 border transition hover:shadow-md ${
+                  student.isPremium
+                    ? "border-yellow-400 shadow-yellow-100"
+                    : "border-gray-100"
+                }`}
               >
+                {/* Badge Premium del Estudiante */}
+                {student.isPremium && (
+                  <span className="inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-semibold px-2 py-0.5 rounded-full mb-2">
+                    <Crown size={11} />
+                    Premium Student
+                  </span>
+                )}
+
                 <h3 className="font-bold text-gray-800 text-lg mb-1">
                   {student.full_name || student.estudiante_nombre}
                 </h3>
@@ -187,7 +206,7 @@ export default function ManageApplications() {
         )}
       </section>
 
-      {/* Modal para mostrar el CV */}
+      {/* Modal CV */}
       {selectedCV && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-8 relative max-h-[90vh] overflow-y-auto border border-gray-200">
@@ -209,15 +228,12 @@ export default function ManageApplications() {
               <h3 className="text-xl font-semibold text-gray-700 border-b pb-2 mb-3">
                 Información Personal
               </h3>
-
               <p className="mb-1">
                 <span className="font-semibold">Nombre:</span> {selectedCV.full_name}
               </p>
-
               <p className="mb-1">
                 <span className="font-semibold">Email:</span> {selectedCV.email}
               </p>
-
               <p>
                 <span className="font-semibold">Teléfono:</span>{" "}
                 {selectedCV.phone || "N/A"}
@@ -273,11 +289,10 @@ export default function ManageApplications() {
         </div>
       )}
 
-      {/* Modal de aceptar + mensaje */}
+      {/* Modal Aceptar */}
       {showAcceptModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg">
-
             <h2 className="text-xl font-semibold mb-3">
               Mensaje para {showAcceptModal.full_name || showAcceptModal.estudiante_nombre}
             </h2>

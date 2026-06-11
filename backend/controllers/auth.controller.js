@@ -1,12 +1,12 @@
 // controllers/auth.controller.js
-import pool from "../db.js";
+import { db, auth } from "../db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 // REGISTER
 export async function register(req, res) {
   try {
-    console.log("REQ BODY:", req.body); // DEBUG
+    console.log("REQ BODY:", req.body);
 
     const { role, name, email, password } = req.body;
 
@@ -14,7 +14,6 @@ export async function register(req, res) {
       return res.status(400).json({ message: "Missing fields" });
     }
 
-    // Conversión roles frontend → backend
     const rolesMap = {
       "Student": "estudiante",
       "Company": "empresa",
@@ -24,37 +23,51 @@ export async function register(req, res) {
     const rol = rolesMap[role];
     if (!rol) return res.status(400).json({ message: "Invalid role" });
 
+    // Verificar si el email ya existe
+    const existing = await db.collection("usuarios")
+      .where("email", "==", email)
+      .limit(1)
+      .get();
+
+    if (!existing.empty) {
+      return res.status(409).json({ message: "Email already registered" });
+    }
+
     // Encriptar contraseña
     const hashed = await bcrypt.hash(password, 10);
 
-    // Insertar en usuarios
-    const [result] = await pool.query(
-      "INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)",
-      [name, email, hashed, rol]
-    );
+    // Crear usuario en Firestore
+    const userRef = await db.collection("usuarios").add({
+      nombre: name,
+      email,
+      password: hashed,
+      rol,
+      creadoEn: new Date(),
+    });
 
-    const userId = result.insertId;
+    const userId = userRef.id;
 
-    // Insertar tabla por rol
+    // Crear documento por rol
     if (rol === "estudiante") {
-      await pool.query(
-        "INSERT INTO estudiantes (usuario_id) VALUES (?)",
-        [userId]
-      );
+      await db.collection("estudiantes").doc(userId).set({
+        usuario_id: userId,
+        creadoEn: new Date(),
+      });
     }
 
     if (rol === "empresa") {
-      await pool.query(
-        "INSERT INTO empresas (usuario_id, nombre_empresa) VALUES (?, '')",
-        [userId]
-      );
+      await db.collection("empresas").doc(userId).set({
+        usuario_id: userId,
+        nombre_empresa: "",
+        creadoEn: new Date(),
+      });
     }
 
     if (rol === "universidad") {
-      await pool.query(
-        "INSERT INTO universidades (usuario_id) VALUES (?)",
-        [userId]
-      );
+      await db.collection("universidades").doc(userId).set({
+        usuario_id: userId,
+        creadoEn: new Date(),
+      });
     }
 
     return res.status(201).json({ message: "User registered successfully" });
@@ -75,16 +88,17 @@ export async function login(req, res) {
     }
 
     // Buscar usuario por email
-    const [rows] = await pool.query(
-      "SELECT * FROM usuarios WHERE email = ? LIMIT 1",
-      [email]
-    );
+    const snapshot = await db.collection("usuarios")
+      .where("email", "==", email)
+      .limit(1)
+      .get();
 
-    if (rows.length === 0) {
+    if (snapshot.empty) {
       return res.status(401).json({ success: false, message: "User not found" });
     }
 
-    const user = rows[0];
+    const userDoc = snapshot.docs[0];
+    const user = { id: userDoc.id, ...userDoc.data() };
 
     // Validar contraseña
     const match = await bcrypt.compare(password, user.password);
@@ -99,34 +113,20 @@ export async function login(req, res) {
       { expiresIn: "1d" }
     );
 
-    // ================
-    // OBTENER studentId
-    // ================
+    // Obtener ID del perfil según rol
     let studentId = null;
     let empresaId = null;
 
     if (user.rol === "estudiante") {
-      const [studentRows] = await pool.query(
-        "SELECT id FROM estudiantes WHERE usuario_id = ?",
-        [user.id]
-      );
-
-      if (studentRows.length > 0) {
-        studentId = studentRows[0].id;
-      }
+      const estudianteDoc = await db.collection("estudiantes").doc(user.id).get();
+      if (estudianteDoc.exists) studentId = estudianteDoc.id;
     }
 
     if (user.rol === "empresa") {
-  const [companyRows] = await pool.query(
-    "SELECT id FROM empresas WHERE usuario_id = ?",
-    [user.id]
-  );
-  if (companyRows.length > 0) empresaId = companyRows[0].id;
-}
+      const empresaDoc = await db.collection("empresas").doc(user.id).get();
+      if (empresaDoc.exists) empresaId = empresaDoc.id;
+    }
 
-    // ================
-    // RESPUESTA FINAL
-    // ================
     return res.json({
       success: true,
       message: "Login successful",
@@ -134,7 +134,7 @@ export async function login(req, res) {
       userId: user.id,
       role: user.rol,
       studentId,
-      empresaId
+      empresaId,
     });
 
   } catch (err) {
@@ -142,4 +142,3 @@ export async function login(req, res) {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 }
-

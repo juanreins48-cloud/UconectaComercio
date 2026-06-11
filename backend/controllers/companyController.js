@@ -1,78 +1,80 @@
 // controllers/companyController.js
-import pool from "../db.js";
+import { db } from "../db.js";
 
-// GET Dashboard Empresa
 export const getDashboard = async (req, res) => {
   const { empresaId } = req.params;
 
   try {
-    // 1️⃣ Estadísticas
+    // Cambio: COUNT(*) WHERE empresa_id → .where().get().size
+    const activeOffersSnap = await db.collection("ofertas")
+      .where("empresa_id", "==", empresaId)
+      .get();
+    const activeOffers = activeOffersSnap.size;
 
-    // Total ofertas activas
-    const [activeOffersResult] = await pool.query(
-      "SELECT COUNT(*) AS activeOffers FROM ofertas WHERE empresa_id = ?",
-      [empresaId]
-    );
-    const activeOffers = activeOffersResult[0].activeOffers;
+    // Cambio: JOIN aplicaciones + ofertas → no existe JOIN en Firestore
+    // Solución: primero obtenemos los IDs de las ofertas de la empresa,
+    // luego filtramos aplicaciones por esos IDs
+    const ofertaIds = activeOffersSnap.docs.map(doc => doc.id);
 
-    // Total aplicaciones
-    const [applicationsResult] = await pool.query(
-      `SELECT COUNT(*) AS totalApplications
-       FROM aplicaciones a
-       JOIN ofertas o ON a.oferta_id = o.id
-       WHERE o.empresa_id = ?`,
-      [empresaId]
-    );
-    const applications = applicationsResult[0].totalApplications;
+    let applications = 0;
+    let interviews = 0;
 
-    // Total entrevistas
-    const [interviewsResult] = await pool.query(
-      `SELECT COUNT(*) AS totalInterviews
-       FROM aplicaciones a
-       JOIN ofertas o ON a.oferta_id = o.id
-       WHERE o.empresa_id = ? AND a.estado = 'entrevista'`,
-      [empresaId]
-    );
-    const interviews = interviewsResult[0].totalInterviews;
+    // Firestore no permite WHERE IN con más de 30 elementos
+    // Si hay muchas ofertas habría que paginar, pero para uso normal funciona
+    if (ofertaIds.length > 0) {
+      const appsSnap = await db.collection("aplicaciones")
+        .where("oferta_id", "in", ofertaIds)
+        .get();
+      applications = appsSnap.size;
 
-    // Ofertas cerradas (status 'Closed')
-    const [filledResult] = await pool.query(
-      `SELECT COUNT(*) AS filled
-       FROM ofertas
-       WHERE empresa_id = ? AND status = 'Closed'`,
-      [empresaId]
-    );
-    const filled = filledResult[0].filled;
+      // Cambio: COUNT WHERE estado = 'entrevista' → filtramos en memoria
+      // porque Firestore no permite .where().where() con campos de distintas
+      // colecciones (ya resolvimos el JOIN arriba)
+      interviews = appsSnap.docs.filter(
+        doc => doc.data().estado === "entrevista"
+      ).length;
+    }
 
-    // 2️⃣ Ofertas con número de applicants y status
-    const [offersResult] = await pool.query(
-      `SELECT o.id, o.titulo AS title, 
-              (SELECT COUNT(*) FROM aplicaciones a WHERE a.oferta_id = o.id) AS applicants,
-              o.status
-       FROM ofertas o
-       WHERE o.empresa_id = ?`,
-      [empresaId]
+    // Cambio: COUNT WHERE status = 'Closed' → .where().where().get().size
+    const filledSnap = await db.collection("ofertas")
+      .where("empresa_id", "==", empresaId)
+      .where("status", "==", "Closed")
+      .get();
+    const filled = filledSnap.size;
+
+    // Cambio: SELECT con subquery COUNT → por cada oferta contamos aplicaciones
+    // Hacemos las consultas en paralelo con Promise.all para no hacerlas una por una
+    const offers = await Promise.all(
+      activeOffersSnap.docs.map(async (doc) => {
+        const appsSnap = await db.collection("aplicaciones")
+          .where("oferta_id", "==", doc.id)
+          .get();
+        return {
+          id: doc.id,
+          title: doc.data().titulo,
+          applicants: appsSnap.size,
+          status: doc.data().status,
+        };
+      })
     );
 
-    // 3️⃣ Recent Activity (últimas 5 actividades)
-    const [recentResult] = await pool.query(
-      `SELECT descripcion AS message, tipo, creada_en AS timestamp
-       FROM actividad_empresa
-       WHERE empresa_id = ?
-       ORDER BY creada_en DESC
-       LIMIT 5`,
-      [empresaId]
-    );
+    // Cambio: ORDER BY + LIMIT → .orderBy().limit()
+    const recentSnap = await db.collection("actividad_empresa")
+      .where("empresa_id", "==", empresaId)
+      .orderBy("creada_en", "desc")
+      .limit(5)
+      .get();
+
+    const recent = recentSnap.docs.map(doc => ({
+      message: doc.data().descripcion,
+      tipo: doc.data().tipo,
+      timestamp: doc.data().creada_en,
+    }));
 
     res.json({
-      stats: {
-        activeOffers,
-        applications,
-        interviews,
-        filled
-      },
-      offers: offersResult,
-      recent: recentResult
+      stats: { activeOffers, applications, interviews, filled },
+      offers,
+      recent,
     });
 
   } catch (error) {

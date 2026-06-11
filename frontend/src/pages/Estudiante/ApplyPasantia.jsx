@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Crown, Lock } from "lucide-react";
+import PremiumModal from "../Usuario/Premium";
 
 export default function ApplyPasantia() {
   const navigate = useNavigate();
   const [internships, setInternships] = useState([]);
   const [applied, setApplied] = useState([]);
-  const [cv, setCV] = useState(null); // Para guardar el CV
-  const [showCV, setShowCV] = useState(false); // Modal control
-  const [loading, setLoading] = useState(true); // Loader para ofertas
+  const [loading, setLoading] = useState(true);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  // Leer si el estudiante es premium desde localStorage
+  const isPremiumUser = localStorage.getItem("isPremium") === "true";
 
   useEffect(() => {
     const fetchInternships = async () => {
@@ -15,7 +19,13 @@ export default function ApplyPasantia() {
         const res = await fetch("http://localhost:4000/api/ofertas");
         const data = await res.json();
         if (data.success) {
-          setInternships(data.ofertas);
+          // Ofertas premium primero
+          const sorted = [...data.ofertas].sort((a, b) => {
+            if (a.isPremium && !b.isPremium) return -1;
+            if (!a.isPremium && b.isPremium) return 1;
+            return 0;
+          });
+          setInternships(sorted);
         } else {
           alert(data.message || "Error fetching offers");
         }
@@ -30,7 +40,13 @@ export default function ApplyPasantia() {
     fetchInternships();
   }, []);
 
-  const applyToInternship = async (id) => {
+  const applyToInternship = async (job) => {
+    // Si la oferta es premium y el usuario NO es premium → abrir modal
+    if (job.isPremium && !isPremiumUser) {
+      setShowPremiumModal(true);
+      return;
+    }
+
     try {
       const studentId = localStorage.getItem("studentId");
       if (!studentId) {
@@ -41,17 +57,21 @@ export default function ApplyPasantia() {
       const res = await fetch("http://localhost:4000/api/aplicaciones", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId, internshipId: id }),
+        body: JSON.stringify({ studentId, internshipId: job.id }),
       });
 
       const data = await res.json();
 
       if (!data.success) {
-        alert(data.message);
+        if (data.limitReached) {
+          setShowPremiumModal(true);
+        } else {
+          alert(data.message);
+        }
         return;
       }
 
-      setApplied([...applied, id]);
+      setApplied([...applied, job.id]);
       alert("Aplicación enviada correctamente");
     } catch (error) {
       console.error(error);
@@ -61,29 +81,15 @@ export default function ApplyPasantia() {
 
   const studentId = localStorage.getItem("studentId");
 
-  const fetchCV = async () => {
-    if (!studentId) {
-      alert("No studentId found. Please log in again.");
-      return;
-    }
-
-    try {
-      const res = await fetch(`http://localhost:4000/api/cv/${studentId}`);
-      const data = await res.json();
-      if (!data.success) {
-        alert(data.message);
-        return;
-      }
-      setCV(data.cv);
-      setShowCV(true);
-    } catch (err) {
-      console.error("Error fetching CV:", err);
-      alert("Server error");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+
+      {/* Modal Premium */}
+      <PremiumModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+      />
+
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Available Internships</h1>
         <button
@@ -100,28 +106,74 @@ export default function ApplyPasantia() {
         <p className="text-gray-500">No active internships available.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {internships.map((job) => (
-            <div
-              key={job.id}
-              className="bg-white shadow rounded-xl p-4 border border-gray-100 hover:shadow-md transition"
-            >
-              <h3 className="font-bold text-gray-800 text-lg mb-1">{job.titulo}</h3>
-              <p className="text-sm text-gray-600 mb-1">{job.company} • {job.ubicacion}</p>
-              <p className="text-sm text-gray-500 mb-3">{job.descripcion}</p>
+          {internships.map((job) => {
+            const isLocked = job.isPremium && !isPremiumUser;
+            const alreadyApplied = applied.includes(job.id);
 
-              <button
-                onClick={() => applyToInternship(job.id)}
-                disabled={applied.includes(job.id)}
-                className={`w-full py-2 rounded-lg font-medium transition ${
-                  applied.includes(job.id)
-                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                    : "bg-teal-700 text-white hover:bg-teal-800"
+            return (
+              <div
+                key={job.id}
+                className={`bg-white shadow rounded-xl p-4 border transition hover:shadow-md relative ${
+                  job.isPremium
+                    ? "border-yellow-400 shadow-yellow-100"
+                    : "border-gray-100"
                 }`}
               >
-                {applied.includes(job.id) ? "Already Applied" : "Apply to Internship"}
-              </button>
-            </div>
-          ))}
+                {/* Overlay candado para ofertas premium bloqueadas */}
+                {isLocked && (
+                  <div
+                    className="absolute inset-0 bg-white/80 backdrop-blur-[2px] rounded-xl flex flex-col items-center justify-center gap-2 z-10 cursor-pointer"
+                    onClick={() => setShowPremiumModal(true)}
+                  >
+                    <div className="bg-yellow-400 p-3 rounded-full shadow">
+                      <Lock size={22} className="text-yellow-900" />
+                    </div>
+                    <p className="font-semibold text-gray-800 text-sm">Oferta exclusiva</p>
+                    <p className="text-xs text-gray-500 text-center px-4">
+                      Hazte Premium para aplicar a esta oferta
+                    </p>
+                    <span className="mt-1 inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-semibold px-3 py-1 rounded-full">
+                      <Crown size={11} /> Ver planes Premium
+                    </span>
+                  </div>
+                )}
+
+                {/* Badge Premium de la Oferta */}
+                {job.isPremium && (
+                  <span className="inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-semibold px-2 py-0.5 rounded-full mb-2">
+                    <Crown size={11} />
+                    Premium
+                  </span>
+                )}
+
+                <h3 className="font-bold text-gray-800 text-lg mb-1">{job.titulo}</h3>
+
+                <p className="text-sm text-gray-600 mb-1">
+                  {job.company || "Unknown company"} • {job.ubicacion}
+                  {job.isPremium && (
+                    <span className="inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-semibold px-2 py-0.5 rounded-full ml-2">
+                      <Crown size={11} />
+                      Premium Company
+                    </span>
+                  )}
+                </p>
+
+                <p className="text-sm text-gray-500 mb-3">{job.descripcion}</p>
+
+                <button
+                  onClick={() => applyToInternship(job)}
+                  disabled={alreadyApplied}
+                  className={`w-full py-2 rounded-lg font-medium transition ${
+                    alreadyApplied
+                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                      : "bg-teal-700 text-white hover:bg-teal-800"
+                  }`}
+                >
+                  {alreadyApplied ? "Already Applied" : "Apply to Internship"}
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Crown } from "lucide-react";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -86,6 +87,14 @@ const loadNotifications = async () => {
         <p className="text-mn text-teal-800 mb-4">Student Portal</p>
 
         <nav className="space-y-4">
+         {/*hazte premium botom*/}
+          <button
+          onClick={() => navigate("/premium/checkout")}
+          className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 px-4 py-2 rounded-lg shadow transition"
+        >
+          <Crown size={18} />
+           Premium plan 
+        </button>
           <button className="block w-full text-left text-gray-700 hover:text-teal-700 font-medium">
             
           </button>

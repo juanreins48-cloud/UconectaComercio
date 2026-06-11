@@ -1,19 +1,22 @@
-import pool from "../db.js";
+import { db } from "../db.js";
 
 // Obtener notificaciones por estudiante
 export async function getStudentNotifications(req, res) {
   try {
     const { studentId } = req.params;
 
-    const [rows] = await pool.query(
-      `SELECT id, mensaje, creada_en, leida
-       FROM notificaciones_estudiante
-       WHERE estudiante_id = ?
-       ORDER BY creada_en DESC`,
-      [studentId]
-    );
+    const snapshot = await db
+      .collection("notificaciones_estudiante")
+      .where("estudiante_id", "==", studentId)
+      .orderBy("creada_en", "desc")
+      .get();
 
-    // 🔥 DEVOLVER SOLO EL ARRAY (como tu frontend espera)
+    const rows = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      creada_en: doc.data().creada_en?.toDate().toISOString() ?? null,
+    }));
+
     return res.json(rows);
 
   } catch (error) {
@@ -22,28 +25,35 @@ export async function getStudentNotifications(req, res) {
   }
 }
 
+// Obtener notificaciones por universidad
 export const getUniversityNotifications = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const [rows] = await pool.query(
-      `SELECT id FROM universidades WHERE usuario_id = ?`,
-      [userId]
-    );
+    // Buscar la universidad asociada al usuario
+    const uniSnapshot = await db
+      .collection("universidades")
+      .where("usuario_id", "==", userId)
+      .limit(1)
+      .get();
 
-    if (rows.length === 0) {
+    if (uniSnapshot.empty) {
       return res.status(404).json({ error: "Universidad no encontrada" });
     }
 
-    const universidadId = rows[0].id;
+    const universidadId = uniSnapshot.docs[0].id;
 
-    const [notificaciones] = await pool.query(
-      `SELECT id, mensaje, creada_en, leida 
-       FROM notificaciones_universidad
-       WHERE universidad_id = ?
-       ORDER BY creada_en DESC`,
-      [universidadId]
-    );
+    const snapshot = await db
+      .collection("notificaciones_universidad")
+      .where("universidad_id", "==", universidadId)
+      .orderBy("creada_en", "desc")
+      .get();
+
+    const notificaciones = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      creada_en: doc.data().creada_en?.toDate().toISOString() ?? null,
+    }));
 
     res.json({ notificaciones });
 

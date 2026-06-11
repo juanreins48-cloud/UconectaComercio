@@ -1,17 +1,19 @@
 // db.js
-import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
+import admin from "firebase-admin";
+import dotenv from "dotenv";
 dotenv.config();
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    }),
+  });
+}
 
-export default pool;
+export const db = admin.firestore();
+export const auth = admin.auth();
+
+export default db;

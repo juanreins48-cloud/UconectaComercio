@@ -34,7 +34,7 @@ export default function SubmitCv({ onClose }) {
         body: JSON.stringify({
           studentId,
 
-          // 🔥 Corrección: coincide con el campo de la DB
+          // Corrección: coincide con el campo de la DB
           full_name: cv.fullName,
 
           email: cv.email,

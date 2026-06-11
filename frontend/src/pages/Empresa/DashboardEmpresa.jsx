@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Crown } from "lucide-react";
 
 export default function CompanyDashboard({ empresaId }) {
   const navigate = useNavigate();
@@ -15,36 +16,36 @@ export default function CompanyDashboard({ empresaId }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Tomar empresaId de prop o de localStorage
-        const id = empresaId || localStorage.getItem("empresaId");
-        if (!id) {
-          setError("No se encontró el ID de la empresa");
-          setLoading(false);
-          return;
-        }
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const id = empresaId || localStorage.getItem("empresaId");
+      
+      console.log("ID usado para fetch:", id); // debug temporal
 
-        const res = await fetch(`http://localhost:4000/api/dashboard/empresa/${id}`);
-        if (!res.ok) {
-          throw new Error("Error al cargar datos del dashboard");
-        }
-
-        const data = await res.json();
-        setStats(data.stats);
-        setOffers(data.offers);
-        setRecent(data.recent);
-      } catch (err) {
-        console.error(err);
-        setError("Error al cargar el dashboard");
-      } finally {
+      if (!id || id === "null") {
+        setError("Sesión no encontrada. Por favor inicia sesión nuevamente.");
         setLoading(false);
+        return;
       }
-    };
 
-    fetchData();
-  }, [empresaId]);
+      const res = await fetch(`http://localhost:4000/api/dashboard/empresa/${id}`);
+      if (!res.ok) throw new Error("Error al cargar datos del dashboard");
+
+      const data = await res.json();
+      setStats(data.stats);
+      setOffers(data.offers);
+      setRecent(data.recent);
+    } catch (err) {
+      console.error(err);
+      setError("Error al cargar el dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [empresaId]);
 
   if (loading) return <p className="p-6">Cargando dashboard...</p>;
   if (error) return <p className="p-6 text-red-500">{error}</p>;
@@ -60,12 +61,24 @@ export default function CompanyDashboard({ empresaId }) {
           <h2 className="text-2xl font-bold text-black-800 ml-2">U Conecta</h2>
         </div>
         <p className="text-mn text-teal-800 mb-4">Company Portal</p>
-        <nav className="space-y-3">
+          <button
+          onClick={() => navigate("/premium/checkout")}
+          className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 px-4 py-2 rounded-lg shadow transition"
+        >
+          <Crown size={18} />
+           Premium plan 
+        </button>
+          <button className="block w-full text-left text-gray-700 hover:text-teal-700 font-medium">
+            
+          </button> 
+          <nav className="space-y-3">
           <a href="#" className="block text-gray-700 hover:text-teal-600"> </a>
           <a href="#" className="block text-gray-700 hover:text-teal-600" onClick={() => navigate("/ajustesCuenta")}>Account Settings</a>
           <a href="#" className="block text-gray-700 hover:text-teal-600" onClick={() => navigate("/soporte")}>Help & Support</a>
-        </nav>
+        </nav>{/*hazte premium botom*/}
+       
       </aside>
+       
 
       {/* Main content */}
       <main className="flex-1 p-8">

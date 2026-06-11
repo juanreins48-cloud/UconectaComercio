@@ -20,6 +20,7 @@ export default function Login() {
       });
 
       const data = await res.json();
+      
 
       if (!data.success) {
         alert(data.message);
@@ -33,6 +34,7 @@ export default function Login() {
       localStorage.setItem("userId", data.userId);
       localStorage.setItem("studentId", data.studentId);
       localStorage.setItem("empresaId", data.empresaId);
+      localStorage.setItem("isPremium", data.isPremium);
 
       // Redirigir según el rol
       if (data.role === "estudiante") navigate("/estudiante");

@@ -1,36 +1,58 @@
 // controllers/files.controller.js
-import pool from '../db.js';
+import { db } from '../db.js';
 
+// Cambio: INSERT INTO files → db.collection('files').add()
 export async function uploadFile(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file' });
+
     const { originalname, filename, mimetype, size, path } = req.file;
     const uploaded_by = req.user?.id || null;
-    const [result] = await pool.query(
-      'INSERT INTO files (original_name, filename, mime_type, size, path, uploaded_by) VALUES (?, ?, ?, ?, ?, ?)',
-      [originalname, filename, mimetype, size, path, uploaded_by]
-    );
-    res.status(201).json({ id: result.insertId, originalname, filename });
+
+    // Cambio: result.insertId no existe en Firestore — usamos ref.id (string)
+    const ref = await db.collection('files').add({
+      original_name: originalname,
+      filename,
+      mime_type: mimetype,
+      size,
+      path,
+      uploaded_by,
+      uploaded_at: new Date(), // Cambio: MySQL tenía TIMESTAMP DEFAULT NOW(), Firestore no
+    });
+
+    res.status(201).json({ id: ref.id, originalname, filename });
   } catch (err) {
     next(err);
   }
 }
 
+// Cambio: SELECT ORDER BY uploaded_at DESC → .orderBy('uploaded_at', 'desc')
 export async function listFiles(req, res, next) {
   try {
-    const [rows] = await pool.query('SELECT id, original_name, filename, mime_type, size, uploaded_at, uploaded_by FROM files ORDER BY uploaded_at DESC');
-    res.json(rows);
+    const snapshot = await db.collection('files')
+      .orderBy('uploaded_at', 'desc')
+      .get();
+
+    const files = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json(files);
   } catch (err) {
     next(err);
   }
 }
 
+// Cambio: SELECT WHERE id → db.collection('files').doc(id).get()
 export async function serveFile(req, res, next) {
   try {
-    const [rows] = await pool.query('SELECT * FROM files WHERE id = ?', [req.params.id]);
-    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
-    const file = rows[0];
-    res.sendFile(file.path, { root: '.' }); // path guard: asegurarse que sea seguro
+    const doc = await db.collection('files').doc(req.params.id).get();
+
+    if (!doc.exists) return res.status(404).json({ error: 'No encontrado' });
+
+    const file = doc.data();
+    res.sendFile(file.path, { root: '.' });
   } catch (err) {
     next(err);
   }
