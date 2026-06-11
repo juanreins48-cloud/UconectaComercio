@@ -5,7 +5,7 @@ export default function MyCV() {
   const studentId = localStorage.getItem("userId");
 
   useEffect(() => {
-    fetch(`http://localhost:4000/api/cv/${studentId}`)
+    fetch(`https://uconecta-backend.onrender.com/api/cv/${studentId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {

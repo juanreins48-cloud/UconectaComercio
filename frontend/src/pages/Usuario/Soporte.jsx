@@ -12,7 +12,7 @@ export default function HelpSupport() {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:4000/api/usuario/me", {
+        const res = await fetch("http://https://uconecta-backend.onrender.com/api/usuario/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -41,7 +41,7 @@ export default function HelpSupport() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:4000/api/soporte", {
+      const res = await fetch("https://uconecta-backend.onrender.com/api/soporte", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

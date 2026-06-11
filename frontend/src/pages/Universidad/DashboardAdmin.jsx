@@ -26,7 +26,7 @@ export default function UniversityDashboard() {
         const userId = localStorage.getItem("userId");
 
         const res = await fetch(
-          `http://localhost:4000/api/dashboard/universidad/${userId}`
+          `http://https://uconecta-backend.onrender.com/api/dashboard/universidad/${userId}`
         );
         const data = await res.json();
 
@@ -50,7 +50,7 @@ export default function UniversityDashboard() {
     try {
       setSupportLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:4000/api/soporte", {
+      const res = await fetch("http://https://uconecta-backend.onrender.com/api/soporte", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -79,7 +79,7 @@ export default function UniversityDashboard() {
   const viewMessageDetail = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:4000/api/soporte/${id}`, {
+      const res = await fetch(`https://uconecta-backend.onrender.com/api/soporte/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();

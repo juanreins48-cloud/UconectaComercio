@@ -17,7 +17,7 @@ export default function ViewCV() {
           return;
         }
 
-        const res = await fetch(`http://localhost:4000/api/cv/view/${studentId}`);
+        const res = await fetch(`https://uconecta-backend.onrender.com/api/cv/view/${studentId}`);
         const data = await res.json();
 
         if (!data.success) {

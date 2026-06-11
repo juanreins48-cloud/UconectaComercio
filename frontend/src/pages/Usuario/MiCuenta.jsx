@@ -10,7 +10,7 @@ export default function MyAccount() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token"); // JWT
-        const res = await fetch("http://localhost:4000/api/usuario/me", {
+        const res = await fetch("https://uconecta-backend.onrender.com/api/usuario/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
 

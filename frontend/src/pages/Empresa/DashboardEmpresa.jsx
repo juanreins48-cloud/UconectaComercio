@@ -5,7 +5,7 @@ import { Crown } from "lucide-react";
 export default function CompanyDashboard({ empresaId }) {
   const navigate = useNavigate();
 
-  const [offers, setOffers] = useState([]);
+  const [, setOffers] = useState([]);
   const [stats, setStats] = useState({
     activeOffers: 0,
     applications: 0,
@@ -29,7 +29,7 @@ useEffect(() => {
         return;
       }
 
-      const res = await fetch(`http://localhost:4000/api/dashboard/empresa/${id}`);
+      const res = await fetch(`https://uconecta-backend.onrender.com/api/dashboard/empresa/${id}`);
       if (!res.ok) throw new Error("Error al cargar datos del dashboard");
 
       const data = await res.json();
@@ -72,9 +72,19 @@ useEffect(() => {
             
           </button> 
           <nav className="space-y-3">
-          <a href="#" className="block text-gray-700 hover:text-teal-600"> </a>
-          <a href="#" className="block text-gray-700 hover:text-teal-600" onClick={() => navigate("/ajustesCuenta")}>Account Settings</a>
-          <a href="#" className="block text-gray-700 hover:text-teal-600" onClick={() => navigate("/soporte")}>Help & Support</a>
+          <button
+  onClick={() => navigate("/ajustesCuenta")}
+  className="block w-full text-left text-gray-700 hover:text-teal-600"
+>
+  Account Settings
+</button>
+
+<button
+  onClick={() => navigate("/soporte")}
+  className="block w-full text-left text-gray-700 hover:text-teal-600"
+>
+  Help & Support
+</button>
         </nav>{/*hazte premium botom*/}
        
       </aside>

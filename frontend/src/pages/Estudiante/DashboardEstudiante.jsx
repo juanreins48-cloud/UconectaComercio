@@ -27,7 +27,7 @@ export default function StudentDashboard() {
     const fetchData = async () => {
       try {
         
-        const res = await fetch(`http://localhost:4000/api/dashboard/estudiante/${userId}`);
+        const res = await fetch(`http://https://uconecta-backend.onrender.com/api/dashboard/estudiante/${userId}`);
         const data = await res.json();
 
         setStats(data.stats);
@@ -47,7 +47,7 @@ const loadNotifications = async () => {
   const studentId = localStorage.getItem("studentId");
 
   try {
-    const res = await fetch(`http://localhost:4000/api/notificaciones/${studentId}`);
+    const res = await fetch(`https://uconecta-backend.onrender.com/api/notificaciones/${studentId}`);
     const data = await res.json();
 
     // ✅ aseguramos que siempre sea un array

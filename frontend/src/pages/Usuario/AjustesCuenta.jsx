@@ -17,7 +17,7 @@ export default function AccountSettings() {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:4000/api/usuario/me", {
+        const res = await fetch("https://uconecta-backend.onrender.com/api/usuario/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -52,7 +52,7 @@ export default function AccountSettings() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:4000/api/usuario/update/${userId}`, {
+      const res = await fetch(`http://https://uconecta-backend.onrender.com/api/usuario/update/${userId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

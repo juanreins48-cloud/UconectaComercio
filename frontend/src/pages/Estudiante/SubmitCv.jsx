@@ -28,7 +28,7 @@ export default function SubmitCv({ onClose }) {
     }
 
     try {
-      const res = await fetch("http://localhost:4000/api/cv", {
+      const res = await fetch("https://uconecta-backend.onrender.com/api/cv", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -29,7 +29,7 @@ export default function GenerateStatistics() {
 
         const responses = await Promise.all(
           urls.map((u) =>
-            fetch(`http://localhost:4000${u}`).then((r) => r.json())
+            fetch(`https://uconecta-backend.onrender.com${u}`).then((r) => r.json())
           )
         );
 

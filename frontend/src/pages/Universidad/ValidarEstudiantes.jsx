@@ -10,7 +10,7 @@ export default function ValidarEstudiantes() {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/universidad/estudiantes-pendientes");
+        const res = await fetch("http://https://uconecta-backend.onrender.com/api/universidad/estudiantes-pendientes");
         const data = await res.json();
 
         if (!data.success) throw new Error();
@@ -33,7 +33,7 @@ export default function ValidarEstudiantes() {
 
   const validarEstudiante = async (id) => {
     try {
-      const res = await fetch("http://localhost:4000/api/universidad/validar-estudiante", {
+      const res = await fetch("https://uconecta-backend.onrender.com/api/universidad/validar-estudiante", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentId: id }),
@@ -56,7 +56,7 @@ export default function ValidarEstudiantes() {
 
   const reportarEstudiante = async (id) => {
     try {
-      const res = await fetch("http://localhost:4000/api/universidad/reportar-estudiante", {
+      const res = await fetch("http://https://uconecta-backend.onrender.com/api/universidad/reportar-estudiante", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentId: id }),

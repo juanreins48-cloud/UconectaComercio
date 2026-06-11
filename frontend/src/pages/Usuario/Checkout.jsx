@@ -202,7 +202,7 @@ export default function PremiumCheckout() {
     // Llamar al backend para activar premium
     const userId = localStorage.getItem("userId");
     try {
-      await fetch("http://localhost:4000/api/usuario/premium", {
+      await fetch("https://uconecta-backend.onrender.com/api/usuario/premium", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, role }),

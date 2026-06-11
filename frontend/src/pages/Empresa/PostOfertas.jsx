@@ -33,7 +33,7 @@ export default function PostOffer() {
       }
 
       // Enviar datos al backend
-      const res = await fetch("http://localhost:4000/api/ofertas", {
+      const res = await fetch("https://uconecta-backend.onrender.com/api/ofertas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

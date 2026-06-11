@@ -14,7 +14,7 @@ export default function ManageApplications() {
   useEffect(() => {
     if (!empresaId) return;
 
-    fetch(`http://localhost:4000/api/solicitudes/company/${empresaId}`)
+    fetch(`http://https://uconecta-backend.onrender.com/api/solicitudes/company/${empresaId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
@@ -31,7 +31,7 @@ export default function ManageApplications() {
   const handleDecision = async (aplicacionId, decision) => {
     setDecisions({ ...decisions, [aplicacionId]: decision });
 
-    await fetch(`http://localhost:4000/api/solicitudes/${aplicacionId}`, {
+    await fetch(`https://uconecta-backend.onrender.com/api/solicitudes/${aplicacionId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: decision }),
