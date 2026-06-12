@@ -19,12 +19,14 @@ import ValidarEmpresas from "../pages/Universidad/ValidateEmpresas";
 import GenerateStatistics from "../pages/Universidad/GenerateStatics";
 import Premium from "../pages/Usuario/Premium";
 import Checkout from "../pages/Usuario/Checkout";
+import PoliticaDatos from "../pages/PoliticaDatos";
 export default function AppRouter() {
   return (
     <Routes>
       //rutas generales
       <Route path="/" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/politica-datos" element={<PoliticaDatos />}/>
 
       //rutas de usuario 
             <Route path="/ajustesCuenta" element={<AjustesCuenta />} />

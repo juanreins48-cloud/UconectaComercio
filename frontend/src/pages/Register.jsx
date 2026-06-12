@@ -8,6 +8,7 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [acceptedPolicy, setAcceptedPolicy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -15,6 +16,12 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
+    //politica de privacidad
+    if (!acceptedPolicy) {
+  setErrorMsg("You must accept the data protection policy.");
+  setLoading(false);
+  return;
+}
 
     try {//cambiar api
       const response = await fetch("https://uconecta-backend.onrender.com/api/auth/register", {
@@ -25,6 +32,8 @@ export default function Register() {
           name,
           email,
           password,
+          acceptedPolicy,
+          policyDate: new Date()
         }),
       });
 
@@ -133,7 +142,25 @@ export default function Register() {
               className="w-full p-3 border rounded-xl"
             />
           </div>
+              <div className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={acceptedPolicy}
+            onChange={(e) => setAcceptedPolicy(e.target.checked)}
+            className="mt-1"
+          />
 
+          <p className="text-gray-600">
+           I accept the{" "}
+            <a
+              href="/politica-datos"
+              className="text-teal-700 underline"
+              target="_blank"
+            >
+              Data Protection Policy
+            </a>
+          </p>
+        </div>
           <button
             type="submit"
             disabled={loading}

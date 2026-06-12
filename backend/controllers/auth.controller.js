@@ -8,9 +8,9 @@ export async function register(req, res) {
   try {
     console.log("REQ BODY:", req.body);
 
-    const { role, name, email, password } = req.body;
+    const { role, name, email, password, acceptedPolicy, policyDate } = req.body;
 
-    if (!role || !name || !email || !password) {
+    if (!role || !name || !email || !password || !acceptedPolicy) {
       return res.status(400).json({ message: "Missing fields" });
     }
 
@@ -43,6 +43,13 @@ export async function register(req, res) {
       password: hashed,
       rol,
       creadoEn: new Date(),
+
+      aceptoPolitica: acceptedPolicy,
+  fechaAceptacionPolitica: policyDate 
+    ? new Date(policyDate)
+    : new Date(),
+
+  creadoEn: new Date(),
     });
 
     const userId = userRef.id;
