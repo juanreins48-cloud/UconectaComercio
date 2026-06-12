@@ -129,6 +129,15 @@ export default function UniversityDashboard() {
           >
             Support
           </button>
+          <button
+  onClick={() => {
+    localStorage.clear();
+    navigate("/");
+  }}
+  className="block w-full text-left text-red-600 hover:text-red-800 font-medium"
+>
+  Logout
+</button>
         </nav>
       </aside>
 

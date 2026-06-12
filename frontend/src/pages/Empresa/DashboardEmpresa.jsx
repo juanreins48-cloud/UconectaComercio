@@ -85,6 +85,18 @@ useEffect(() => {
 >
   Help & Support
 </button>
+
+      {/*boton de salir */}
+<button
+  onClick={() => {
+    localStorage.clear();
+    navigate("/");
+  }}
+  className="block w-full text-left text-red-600 hover:text-red-800 font-medium"
+>
+  Logout
+</button>
+
         </nav>{/*hazte premium botom*/}
        
       </aside>
